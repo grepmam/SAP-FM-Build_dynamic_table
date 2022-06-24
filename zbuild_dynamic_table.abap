@@ -48,12 +48,16 @@ FUNCTION zbuild_dynamic_table.
 
   SPLIT lv_fields AT space INTO TABLE lt_fields1.
 
+  " Verificar que la tabla haya sido seteada
+
   IF lv_tablename IS INITIAL.
 
     RAISE TABLENAME_NOT_SET.
 
   ELSE.
-
+    
+    " Verificar si existe la tabla transparente y esté activa
+    
     CLEAR lv_db_exists.
 
     SELECT COUNT(*)
@@ -73,7 +77,9 @@ FUNCTION zbuild_dynamic_table.
   CREATE DATA lt_dynamic TYPE TABLE OF (lv_tablename).
   ASSIGN lt_dynamic->* TO <lt_table>.
 
-  " Chequear y extraer los campos de la tabla
+  " Chequear y extraer los registros que serían las columnas de la tabla solicitada
+  
+  REFRESH lt_fields2.
 
   SELECT fieldname
     FROM dd03l
@@ -83,7 +89,9 @@ FUNCTION zbuild_dynamic_table.
             AND fieldname EQ lt_fields1-fieldname.
 
   IF lt_fields2 IS NOT INITIAL.
-
+    
+    " Chequear si las columnas de la tabla de cadenas es igual a la tabla de tipo campo
+    
     lv_count_tb1 = lines( lt_fields1 ).
     lv_count_tb2 = lines( lt_fields2 ).
 
@@ -99,7 +107,7 @@ FUNCTION zbuild_dynamic_table.
 
   ENDIF.
 
-  " Extraer los valores de la tabla solicitada
+  " Extraer registros de la tabla solicitada
 
   SELECT (lt_fields2)
     FROM (lv_tablename)
@@ -110,6 +118,8 @@ FUNCTION zbuild_dynamic_table.
     RAISE DB_EMPTY.
 
   ENDIF.
+
+  " Mover valores a la tabla de resultados
 
   MOVE-CORRESPONDING <lt_table> TO et_table.
 
